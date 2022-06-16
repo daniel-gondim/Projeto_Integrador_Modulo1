@@ -1,39 +1,55 @@
 import java.net.*;
 import java.util.Scanner;
+import javax.swing.JOptionPane;
 import java.io.*;
 
 public class Servidor {
 	public static void main(String[] args) throws Exception {
-		Scanner teclado = new Scanner(System.in);
-		// Criar um Socket para "escutar" (listen) a porta 7777
+		
+		// Cria um Socket para "escutar" (listen) a porta 7777
 		ServerSocket servidor = new ServerSocket(7777);
-		System.out.println("Aguardando conexÃ£o do cliente...");
-		// Servidor deve aceitar a conexï¿½o do cliente quando ela chegar
+		System.out.println("Aguardando conexão do cliente na porta 7777...");
+		//JOptionPane.showMessageDialog(null, "Aguardando conexão do cliente na porta 7777...");
+		
+		// Aceita a conexão do cliente quando ela chegar
 		Socket conexao = servidor.accept();
-		System.out.println("Conexï¿½o estabelecida!");
-		// Criando os objetos de entrada e saï¿½da de dados
+		System.out.println("Conexão com o cliente " + conexao.getInetAddress().getHostAddress() + " estabelecida com sucesso!");
+		
+		// Cria os objetos de entrada e saída de dados
+		Scanner teclado = new Scanner(System.in);
 		InputStream entrada = conexao.getInputStream();
 		OutputStream saida = conexao.getOutputStream();
+		
+		// Cria fora do loop uma cadeia de caracteres que será usada para transformar a mensagem do servidor em um array de caracteres 		
+		char [] auxiliar; 
+		
 		while (true) {
-			// Servidor:
-			// Criar um "espaï¿½o" em bytes para armazenar os dados recebidos
-			byte[] dadosCliente = new byte[100]; // Tamanho arbitrï¿½rio suficiente
-			// Ler os dados recebidos da entrada
-			entrada.read(dadosCliente);
-			// Converter os bytes recebidos para String
-			String mensagemCliente = new String(dadosCliente);
-			// Exibir a String recebida
-			System.out.println("CLIENTE >> " + mensagemCliente);
-			//Enviar resposta para o cliente:
-			System.out.print("SERVIDOR >> ");
-			String mensagemServidor = teclado.nextLine();
-			// Enviar os bytes da string mensagem para o servidor
-			// Transformar a String em um array de bytes
-			byte[] dadosServidor = mensagemServidor.getBytes();
-			// Enviar os bytes
-			saida.write(dadosServidor);
-			// Forï¿½ar o envio de poucos bytes
-			saida.flush();
+			// Cria um "espaço" em bytes para armazenar os dados recebidos
+			byte[] dadosCliente = new byte[100]; // Tamanho arbitr rio suficiente
+			
+			// Lê os dados recebidos do cliente
+			int max = entrada.read(dadosCliente);
+			
+			// Converte os bytes recebidos do cliente para string e aplicar o método descripto para descriptografar a mensagem
+			String mensagemCliente = new String(Criptografia.descripto(dadosCliente, max));
+			
+			// Imprime a mensagem enviada pelo cliente
+			JOptionPane.showMessageDialog(null, "Cliente >> " + mensagemCliente);
+			
+			// Envia resposta para o cliente:
+			String mensagemServidor = JOptionPane.showInputDialog("Servidor >> ");
+			// System.out.print("SERVIDOR >> ");
+			// JOptionPane.showMessageDialog(null, "Servidor >> ");
+			// String mensagemServidor = teclado.nextLine();
+			
+			// Transforma a mensagem do servidor em um array de caracteres 	
+			auxiliar = mensagemServidor.toCharArray();
+			
+			// Escreve a mensagem em forma de bytes para o cliente utilizando, para isso, o método cripto
+			saida.write(Criptografia.cripto(auxiliar));
+			
+			// Força o envio de poucos bytes
+			saida.flush();		
 			
 		}
 	}

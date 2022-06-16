@@ -2,38 +2,53 @@ import java.net.*;
 import java.io.*;
 import java.util.Scanner;
 
-public class Cliente {
+import javax.swing.JOptionPane;
 
+public class Cliente {
 	public static void main(String[] args) throws Exception {
-		Scanner teclado = new Scanner(System.in);
-		// Abrindo conexï¿½o com o servidor no IP 127.0.0.1, porta: 7777
+		// Cria array de bytes que será enviado para o servidor
+		char[] letras;
+
+		// Cria uma conexao com o servidor no IP 127.0.0.1, porta: 7777
 		Socket conexao = new Socket("127.0.0.1", 7777);
-		// Criando os objetos de entrada e saï¿½da de dados
+		System.out.println("O cliente acaba de se conectar ao servidor!");
+
+		// Cria os objetos de entrada e saida de dados
+		Scanner teclado = new Scanner(System.in);
 		InputStream entrada = conexao.getInputStream();
 		OutputStream saida = conexao.getOutputStream();
 
+		// while com true para iniciar um loop infinito
 		while (true) {
-			System.out.print("CLIENTE >> ");
-			String mensagemCliente = teclado.nextLine();
-			// Cliente:
-			// Enviar os bytes da string mensagem para o servidor
-			// Transformar a String em um array de bytes
-			byte[] dadosCliente = mensagemCliente.getBytes();
-			// Enviar os bytes
-			saida.write(dadosCliente);
-			// Forï¿½ar o envio de poucos bytes
+
+			// Digita a mensagem a ser enviada
+			String mensagemCliente = JOptionPane.showInputDialog("Cliente >> ");
+			//System.out.print("CLIENTE >> ");
+			//String mensagemCliente = teclado.nextLine();
+
+			// Converte a string fornecida em uma cadeia de caracteres
+			letras = mensagemCliente.toCharArray();
+
+			// Envia os bytes criptografados para o servidor utilizando o método cripto da classe Criptografia
+			saida.write(Criptografia.cripto(letras));
+
+			// System.out.println("Mensagem enviada criptografada!");
+
+			// Força o envio de poucos bytes
 			saida.flush();
 
-			// Criar um "espaï¿½o" em bytes para armazenar os dados recebidos
-			byte[] dadosServidor = new byte[100]; // Tamanho arbitrï¿½rio suficiente
-			// Ler os dados recebidos da entrada
-			entrada.read(dadosServidor);
-			// Converter os bytes recebidos para String
-			String mensagemServidor = new String(dadosServidor);
-			// Exibir a String recebida
-			System.out.println("SERVIDOR >> " + mensagemServidor);
+			// Cria um "espaço" em bytes para armazenar os dados recebidos do servidor
+			byte[] dadosServidor = new byte[100]; // Tamanho arbitr rio suficiente
 
+			// Recebe os dados do servidor com uma variável inteiro para determinar o tamanho máximo do array de byte
+			int max = entrada.read(dadosServidor);
+
+			// Converte os bytes recebidos do servidor para String
+			String mensagemServidor = new String(Criptografia.descripto(dadosServidor, max));
+
+			// Exibe a mensagem enviada pelo servidor
+			// System.out.println("SERVIDOR >> " + mensagemServidor);
+			JOptionPane.showMessageDialog(null, "SERVIDOR >> " + mensagemServidor);
 		}
 	}
-
 }
